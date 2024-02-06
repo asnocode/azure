@@ -1,0 +1,212 @@
+trigger:
+- master
+
+parameters:
+- name: serviceConnection
+  type: string
+  default: 'SDSSQ00 SQL Hotel Test service connection'
+- name: serverName
+  type: string
+  default: 'sqlmi-pc-db-02.806f0210e8bf.database.windows.net,1433'
+- name: databaseName
+  type: string
+  default: 'master'
+- name: backupPath
+  type: string
+  default: 'https://stosqlmipcdb02.blob.core.windows.net/backup'
+
+variables:
+  accesstoken: '(Get-AzAccessToken -ResourceUrl https://database.windows.net).Token'
+
+steps:
+- task: AzurePowerShell@5
+  displayName: 'import modules'
+  condition: succeededOrFailed() #continue on task failure
+  inputs:
+    azureSubscription: ${{parameters.serviceConnection}}
+    scriptType: 'inlineScript'
+    azurePowerShellVersion: LatestVersion
+    inline: |
+     Import-Module SQLServer
+     Import-Module Az.Accounts -MinimumVersion 2.2.0
+- task: AzurePowerShell@5
+  displayName: 'Deploy_008_AdjustTempDBFileCount'
+  condition: succeededOrFailed() #continue on task failure
+  inputs:
+    azureSubscription: ${{parameters.serviceConnection}}
+    scriptType: 'inlineScript'
+    azurePowerShellVersion: LatestVersion
+    inline: |
+     Invoke-Sqlcmd -ServerInstance '${{parameters.serverName}}' -Database '${{parameters.databaseName}}' -AccessToken $(accesstoken) -Inputfile "SDSSQ00_AzureMI\Deployment\008_AdjustTempDBFileCount.sql" -ErrorAction Stop -Verbose
+- task: AzurePowerShell@5
+  displayName: 'Deploy_009_CreateAzCredential'
+  condition: succeededOrFailed() #continue on task failure
+  inputs:
+    azureSubscription: ${{parameters.serviceConnection}}
+    scriptType: 'inlineScript'
+    azurePowerShellVersion: LatestVersion
+    inline: |
+     Invoke-Sqlcmd -ServerInstance '${{parameters.serverName}}' -Database '${{parameters.databaseName}}' -AccessToken $(accesstoken) -Variable @("BackupDrivePath='${{parameters.backupPath}}'") -Inputfile "SDSSQ00_AzureMI\Deployment\009_CreateAzCredential.sql" -ErrorAction Stop -Verbose
+- task: AzurePowerShell@5
+  displayName: 'Deploy_010_If_SysMan'
+  condition: succeededOrFailed() #continue on task failure
+  inputs:
+    azureSubscription: ${{parameters.serviceConnection}}
+    scriptType: 'inlineScript'
+    azurePowerShellVersion: LatestVersion
+    inline: |
+     Invoke-Sqlcmd -ServerInstance '${{parameters.serverName}}' -Database '${{parameters.databaseName}}' -AccessToken $(accesstoken) -Inputfile "SDSSQ00_AzureMI\Deployment\010_if_sysman.sql" -ErrorAction Stop -Verbose
+- task: AzurePowerShell@5
+  displayName: 'Deploy_021_ResourceUsageStats'
+  condition: succeededOrFailed() #continue on task failure
+  inputs:
+    azureSubscription: ${{parameters.serviceConnection}}
+    scriptType: 'inlineScript'
+    azurePowerShellVersion: LatestVersion
+    inline: |
+     Invoke-Sqlcmd -ServerInstance '${{parameters.serverName}}' -Database '${{parameters.databaseName}}' -AccessToken $(accesstoken) -Variable @("BackupDrivePath='${{parameters.backupPath}}'") -Inputfile "SDSSQ00_AzureMI\Deployment\021_ResourceUsageStats.sql" -ErrorAction Stop -Verbose
+- task: AzurePowerShell@5
+  displayName: 'Deploy_022_usp_IF_Internal_invoice_load'
+  condition: succeededOrFailed() #continue on task failure
+  inputs:
+    azureSubscription: ${{parameters.serviceConnection}}
+    scriptType: 'inlineScript'
+    azurePowerShellVersion: LatestVersion
+    inline: |
+     Invoke-Sqlcmd -ServerInstance '${{parameters.serverName}}' -Database '${{parameters.databaseName}}' -AccessToken $(accesstoken) -Inputfile "SDSSQ00_AzureMI\Deployment\022_usp_IF_Internal_invoice_load.sql" -ErrorAction Stop -Verbose
+- task: AzurePowerShell@5
+  displayName: 'Deploy_023_DatabaseUsageStats'
+  condition: succeededOrFailed() #continue on task failure
+  inputs:
+    azureSubscription: ${{parameters.serviceConnection}}
+    scriptType: 'inlineScript'
+    azurePowerShellVersion: LatestVersion
+    inline: |
+     Invoke-Sqlcmd -ServerInstance '${{parameters.serverName}}' -Database '${{parameters.databaseName}}' -AccessToken $(accesstoken) -Variable @("BackupDrivePath='${{parameters.backupPath}}'") -Inputfile "SDSSQ00_AzureMI\Deployment\023_DatabaseUsageStats.sql" -ErrorAction Stop -Verbose
+- task: AzurePowerShell@5
+  displayName: 'Deploy_024_DBACollectWaitStats'
+  condition: succeededOrFailed() #continue on task failure
+  inputs:
+    azureSubscription: ${{parameters.serviceConnection}}
+    scriptType: 'inlineScript'
+    azurePowerShellVersion: LatestVersion
+    inline: |
+     Invoke-Sqlcmd -ServerInstance '${{parameters.serverName}}' -Database '${{parameters.databaseName}}' -AccessToken $(accesstoken) -Inputfile "SDSSQ00_AzureMI\Deployment\024_DBACollectWaitStats.sql" -ErrorAction Stop -Verbose
+- task: AzurePowerShell@5
+  displayName: 'Deploy_030_MaintenanceSolution'
+  condition: succeededOrFailed() #continue on task failure
+  inputs:
+    azureSubscription: ${{parameters.serviceConnection}}
+    scriptType: 'inlineScript'
+    azurePowerShellVersion: LatestVersion
+    inline: |
+     Invoke-Sqlcmd -ServerInstance '${{parameters.serverName}}' -Database '${{parameters.databaseName}}' -AccessToken $(accesstoken) -Inputfile "SDSSQ00_AzureMI\Deployment\030_MaintenanceSolution.sql" -ErrorAction Stop -Verbose
+- task: AzurePowerShell@5
+  displayName: 'Deploy_031_IndexOptimize'
+  condition: succeededOrFailed() #continue on task failure
+  inputs:
+    azureSubscription: ${{parameters.serviceConnection}}
+    scriptType: 'inlineScript'
+    azurePowerShellVersion: LatestVersion
+    inline: |
+     Invoke-Sqlcmd -ServerInstance '${{parameters.serverName}}' -Database '${{parameters.databaseName}}' -AccessToken $(accesstoken) -Inputfile "SDSSQ00_AzureMI\Deployment\031_IndexOptimize.sql" -ErrorAction Stop -Verbose
+- task: AzurePowerShell@5
+  displayName: 'Deploy_032_IntegrityCheck'
+  condition: succeededOrFailed() #continue on task failure
+  inputs:
+    azureSubscription: ${{parameters.serviceConnection}}
+    scriptType: 'inlineScript'
+    azurePowerShellVersion: LatestVersion
+    inline: |
+     Invoke-Sqlcmd -ServerInstance '${{parameters.serverName}}' -Database '${{parameters.databaseName}}' -AccessToken $(accesstoken) -Inputfile "SDSSQ00_AzureMI\Deployment\032_IntegrityCheck.sql" -ErrorAction Stop -Verbose
+- task: AzurePowerShell@5
+  displayName: 'Deploy_037_CleanupJobSchedules'
+  condition: succeededOrFailed() #continue on task failure
+  inputs:
+    azureSubscription: ${{parameters.serviceConnection}}
+    scriptType: 'inlineScript'
+    azurePowerShellVersion: LatestVersion
+    inline: |
+     Invoke-Sqlcmd -ServerInstance '${{parameters.serverName}}' -Database '${{parameters.databaseName}}' -AccessToken $(accesstoken) -Inputfile "SDSSQ00_AzureMI\Deployment\037_CleanupJobSchedules.sql" -ErrorAction Stop -Verbose
+     
+- task: AzurePowerShell@5
+  displayName: 'Deploy_040_sp_WhoIsActive'
+  condition: succeededOrFailed() #continue on task failure
+  inputs:
+    azureSubscription: ${{parameters.serviceConnection}}
+    scriptType: 'inlineScript'
+    azurePowerShellVersion: LatestVersion
+    inline: |
+     Invoke-Sqlcmd -ServerInstance '${{parameters.serverName}}' -Database '${{parameters.databaseName}}' -AccessToken $(accesstoken) -Inputfile "SDSSQ00_AzureMI\Deployment\040_sp_WhoIsActive.sql" -ErrorAction Stop -Verbose
+- task: AzurePowerShell@5
+  displayName: 'Deploy_041_sp_WhoIsActive_signature_and_rights'
+  condition: succeededOrFailed() #continue on task failure
+  inputs:
+    azureSubscription: ${{parameters.serviceConnection}}
+    scriptType: 'inlineScript'
+    azurePowerShellVersion: LatestVersion
+    inline: |
+     Invoke-Sqlcmd -ServerInstance '${{parameters.serverName}}' -Database '${{parameters.databaseName}}' -AccessToken $(accesstoken) -Inputfile "SDSSQ00_AzureMI\Deployment\041_sp_WhoIsActive_signature_and_rights.sql" -ErrorAction Stop -Verbose
+- task: AzurePowerShell@5
+  displayName: 'Deploy_042_WhoIsActive_Monitor'
+  condition: succeededOrFailed() #continue on task failure
+  inputs:
+    azureSubscription: ${{parameters.serviceConnection}}
+    scriptType: 'inlineScript'
+    azurePowerShellVersion: LatestVersion
+    inline: |
+     Invoke-Sqlcmd -ServerInstance '${{parameters.serverName}}' -Database '${{parameters.databaseName}}' -AccessToken $(accesstoken) -Inputfile "SDSSQ00_AzureMI\Deployment\042_WhoIsActive_Monitor.sql" -ErrorAction Stop -Verbose
+- task: AzurePowerShell@5
+  displayName: 'Deploy_050_DeadLockMonitoring'
+  condition: succeededOrFailed() #continue on task failure
+  inputs:
+    azureSubscription: ${{parameters.serviceConnection}}
+    scriptType: 'inlineScript'
+    azurePowerShellVersion: LatestVersion
+    inline: |
+     Invoke-Sqlcmd -ServerInstance '${{parameters.serverName}}' -Database '${{parameters.databaseName}}' -AccessToken $(accesstoken) -Inputfile "SDSSQ00_AzureMI\Deployment\050_DeadLockMonitoring.sql" -ErrorAction Stop -Verbose
+- task: AzurePowerShell@5
+  displayName: 'Deploy_051_GetDeadlocks'
+  condition: succeededOrFailed() #continue on task failure
+  inputs:
+    azureSubscription: ${{parameters.serviceConnection}}
+    scriptType: 'inlineScript'
+    azurePowerShellVersion: LatestVersion
+    inline: |
+     Invoke-Sqlcmd -ServerInstance '${{parameters.serverName}}' -Database '${{parameters.databaseName}}' -AccessToken $(accesstoken) -Inputfile "SDSSQ00_AzureMI\Deployment\051_GetDeadlocks.sql" -ErrorAction Stop -Verbose
+- task: AzurePowerShell@5
+  displayName: 'Deploy_052_DeadLock_Cleanup'
+  condition: succeededOrFailed() #continue on task failure
+  inputs:
+    azureSubscription: ${{parameters.serviceConnection}}
+    scriptType: 'inlineScript'
+    azurePowerShellVersion: LatestVersion
+    inline: |
+     Invoke-Sqlcmd -ServerInstance '${{parameters.serverName}}' -Database '${{parameters.databaseName}}' -AccessToken $(accesstoken) -Inputfile "SDSSQ00_AzureMI\Deployment\052_DeadLock_Cleanup.sql" -ErrorAction Stop -Verbose
+- task: AzurePowerShell@5
+  displayName: 'Deploy_060_System_health'
+  condition: succeededOrFailed() #continue on task failure
+  inputs:
+    azureSubscription: ${{parameters.serviceConnection}}
+    scriptType: 'inlineScript'
+    azurePowerShellVersion: LatestVersion
+    inline: |
+     Invoke-Sqlcmd -ServerInstance '${{parameters.serverName}}' -Database '${{parameters.databaseName}}' -AccessToken $(accesstoken) -Variable @("BackupDrivePath='${{parameters.backupPath}}'") -Inputfile "SDSSQ00_AzureMI\Deployment\060_System_health.sql" -ErrorAction Stop -Verbose
+- task: AzurePowerShell@5
+  displayName: 'Deploy_080_Audit'
+  condition: succeededOrFailed() #continue on task failure
+  inputs:
+    azureSubscription: ${{parameters.serviceConnection}}
+    scriptType: 'inlineScript'
+    azurePowerShellVersion: LatestVersion
+    inline: |
+     Invoke-Sqlcmd -ServerInstance '${{parameters.serverName}}' -Database '${{parameters.databaseName}}' -AccessToken $(accesstoken) -Variable @("BackupDrivePath='${{parameters.backupPath}}'") -Inputfile "SDSSQ00_AzureMI\Deployment\080_Audit.sql" -ErrorAction Stop -Verbose
+- task: AzurePowerShell@5
+  displayName: 'Deploy_090_SetInstanceProperties'
+  condition: succeededOrFailed() #continue on task failure
+  inputs:
+    azureSubscription: ${{parameters.serviceConnection}}
+    scriptType: 'inlineScript'
+    azurePowerShellVersion: LatestVersion
+    inline: |
+     Invoke-Sqlcmd -ServerInstance '${{parameters.serverName}}' -Database '${{parameters.databaseName}}' -AccessToken $(accesstoken) -Inputfile "SDSSQ00_AzureMI\Deployment\090_SetInstanceProperties.sql" -ErrorAction Stop -Verbose
